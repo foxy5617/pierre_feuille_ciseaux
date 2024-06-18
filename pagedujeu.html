@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pierre-Feuille-Ciseaux-Lézard-Spock</title>
+    <style>
+        body {
+            background-color: #17161b;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        .score, .result, .choices, .player-choice, .computer-choice, .buttons {
+            margin: 10px 0;
+        }
+        .score {
+            font-size: 1.5rem;
+        }
+        .result, .phrase {
+            font-size: 1.2rem;
+        }
+        .choices div, .player-choice div, .computer-choice div {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            margin: 5px;
+            background-color: #9F9F9F;
+            font-size: 26px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .highlight {
+            border: 3px solid #00f;
+        }
+        button {
+            background-color: #ff0000;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="intro">
+            <p>Vous jouez contre l'ordinateur à</p>
+            <p>Pierre(P)-Feuille(F)-Ciseaux(C)-Lézard(L)-Spock(S).</p>
+            <p>Faites votre choix, et tentez de battre l'ordinateur</p>
+        </div>
+        <div class="score">Score <br> Vous: <span id="score-joueur">0</span> | Ordinateur: <span id="score-ordi">0</span></div>
+        <div class="result"></div>
+        <div class="phrase"></div>
+        <div class="choices">
+            <div data-choice="P">P</div>
+            <div data-choice="F">F</div>
+            <div data-choice="C">C</div>
+            <div data-choice="L">L</div>
+            <div data-choice="S">S</div>
+        </div>
+        <div class="player-choice"></div>
+        <div class="vs">VS</div>
+        <div class="computer-choice"></div>
+        <div class="buttons">
+            <button id="recommencer">Recommencer</button>
+        </div>
+    </div>
+
+    <script>
+        let scoreJoueur = 0;
+        let scoreOrdi = 0;
+        const choices = ['P', 'F', 'C', 'L', 'S'];
+
+        document.querySelectorAll('.choices div').forEach(element => {
+            element.addEventListener('click', () => {
+                jouer(element.dataset.choice);
+            });
+        });
+
+        document.getElementById('recommencer').addEventListener('click', recommencer);
+
+        function jouer(choixJoueur) {
+            resetHighlights();
+            document.querySelector(`[data-choice="${choixJoueur}"]`).classList.add('highlight');
+
+            const choixOrdi = choixOrdinateur();
+            document.querySelector('.player-choice').innerText = choixJoueur;
+            document.querySelector('.computer-choice').innerText = choixOrdi;
+            
+            const resultat = determineWinner(choixJoueur, choixOrdi);
+            document.querySelector('.result').innerText = resultat;
+
+            if (resultat === "Vous gagnez !") {
+                scoreJoueur++;
+            } else if (resultat === "L'ordinateur gagne !") {
+                scoreOrdi++;
+            }
+
+            document.getElementById('score-joueur').innerText = scoreJoueur;
+            document.getElementById('score-ordi').innerText = scoreOrdi;
+
+            updatePhrase(choixJoueur, choixOrdi);
+        }
+
+        function choixOrdinateur() {
+            return choices[Math.floor(Math.random() * choices.length)];
+        }
+
+        function determineWinner(choixJoueur, choixOrdi) {
+            const rules = {
+                'P': ['C', 'L'],
+                'F': ['P', 'S'],
+                'C': ['F', 'L'],
+                'L': ['S', 'F'],
+                'S': ['C', 'P'],
+            };
+
+            if (choixJoueur === choixOrdi) {
+                return "Égalité !";
+            } else if (rules[choixJoueur].includes(choixOrdi)) {
+                return "Vous gagnez !";
+            } else {
+                return "L'ordinateur gagne !";
+            }
+        }
+
+        function updatePhrase(choixJoueur, choixOrdi) {
+            const phrases = {
+                'P': { 'C': "La pierre détruit les ciseaux,\nVous les avez détruit", 'L': "La pierre écrase le lézard,\nVous l'avez écrasé", 'F': "La feuille recouvre la pierre,\nVous avez été recouvert.e", 'S': "Spock vaporise la pierre,\nVous avez été vaporisé.e" },
+                'C': { 'P': "La pierre détruit les ciseaux,\nVous avez été détruit.e", 'L': "Les ciseaux décapitent le lézard,\nVous l'avez décapité", 'F': "Les ciseaux coupent la feuille,\nVous l'avez coupé", 'S': "Spock brise les ciseaux,\nVous avez été brisé.e" },
+                'F': { 'P': "La feuille recouvre la pierre,\nVous l'avez recouvert", 'S': "La feuille désapprouve Spock,\nVous avez désapprouvé Spock", 'C': "Les ciseaux coupent la feuille,\nVous avez été coupé.e", 'L': "Le lézard mange la feuille,\nVous avez été mangé.e" },
+                'L': { 'S': "Le lézard empoisonne Spock,\nVous l'avez empoisonné", 'F': "Le lézard mange la feuille,\nVous l'avez mangée", 'P': "La pierre écrase le lézard,\nVous avez été écrasé.e", 'C': "Les ciseaux décapitent le lézard,\nVous avez été décapité.e" },
+                'S': { 'C': "Spock brise les ciseaux,\nVous les avez brisés", 'P': "Spock vaporise la pierre,\nVous l'avez vaporisée", 'F': "La feuille réfute Spock,\nVous avez été réfuté.e", 'L': "Le lézard empoisonne Spock,\nVous avez été empoisonné.e" }
+            };
+            const phrase = phrases[choixJoueur] ? phrases[choixJoueur][choixOrdi] : "";
+            document.querySelector('.phrase').innerText = phrase;
+        }
+
+        function recommencer() {
+            scoreJoueur = 0;
+            scoreOrdi = 0;
+            document.getElementById('score-joueur').innerText = scoreJoueur;
+            document.getElementById('score-ordi').innerText = scoreOrdi;
+            document.querySelector('.player-choice').innerText = "";
+            document.querySelector('.computer-choice').innerText = "";
+            document.querySelector('.result').innerText = "";
+            document.querySelector('.phrase').innerText = "";
+            resetHighlights();
+        }
+
+        function resetHighlights() {
+            document.querySelectorAll('.choices div').forEach(element => {
+                element.classList.remove('highlight');
+            });
+        }
+    </script>
+</body>
+</html>
